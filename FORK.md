@@ -1,15 +1,13 @@
 # Fork development (k0gen/meshcore-bot)
 
-This repository is a **fork** of [agessaman/meshcore-bot](https://github.com/agessaman/meshcore-bot). Upstream owns core bot behaviour; this fork adds **local LLM integration** (Ollama, LM Studio) under `fork/` without forking the whole codebase.
+Fork of [agessaman/meshcore-bot](https://github.com/agessaman/meshcore-bot). **Upstream owns `main` and `dev`.** This fork keeps them identical and develops local LLM features on a separate branch.
 
 ## Remotes
 
-| Remote     | URL                                              | Use |
-|-----------|---------------------------------------------------|-----|
-| `origin`  | `https://github.com/k0gen/meshcore-bot.git`       | Your fork — push here |
-| `upstream`| `https://github.com/agessaman/meshcore-bot.git`   | Official source — pull/merge only |
-
-One-time setup:
+| Remote     | URL                                            | Use |
+|-----------|------------------------------------------------|-----|
+| `origin`  | `https://github.com/k0gen/meshcore-bot.git`    | Your fork — push here |
+| `upstream`| `https://github.com/agessaman/meshcore-bot.git`| Official source — fetch/merge only |
 
 ```bash
 ./scripts/fork-remotes.sh
@@ -17,67 +15,56 @@ One-time setup:
 
 ## Branch strategy
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Track upstream `main` + minimal fork-only files (`FORK.md`, `fork/`, `scripts/sync-upstream.sh`, CI guard for docs). Rebase or merge from `upstream/main` often. |
-| `dev`  | AI features, field tests, Docker images tagged `dev`. Open PRs to upstream from here when stable. |
-
-Stay current with upstream:
+| Branch | Tracks | Purpose |
+|--------|--------|---------|
+| **`main`** | **`upstream/main` only** (no fork commits) | Fast-forward from upstream; never commit fork work here |
+| **`dev`** | **`upstream/dev` only** | Same — mirror upstream integration branch |
+| **`local-llm`** | `upstream/main` + fork files | AI (Ollama / LM Studio), `fork/`, CI tweak, docs |
 
 ```bash
-./scripts/sync-upstream.sh          # merge upstream/main into current branch
-./scripts/sync-upstream.sh --rebase # or rebase (cleaner history, more conflict risk)
+# Update mirrors (no local changes on main/dev)
+git checkout main && git fetch upstream && git reset --hard upstream/main && git push origin main
+git checkout dev && git fetch upstream && git reset --hard upstream/dev && git push origin dev
+
+# Develop AI
+git checkout local-llm
+./scripts/sync-upstream.sh    # merges upstream/main into local-llm
 ```
 
 ## Docker images (CI)
 
-Workflow [`.github/workflows/docker-build.yml`](.github/workflows/docker-build.yml) uses `ghcr.io/${{ github.repository }}`, so pushes to **this fork** publish:
+[`docker-build.yml`](.github/workflows/docker-build.yml) publishes to `ghcr.io/k0gen/meshcore-bot`:
 
-- `ghcr.io/k0gen/meshcore-bot:latest` — branch `main`
-- `ghcr.io/k0gen/meshcore-bot:dev` — branch `dev`
-- `ghcr.io/k0gen/meshcore-bot:sha-<commit>` — every build
+| Tag | Branch |
+|-----|--------|
+| `latest` | `main` (upstream-equivalent build from fork CI) |
+| `local-llm` | `local-llm` |
+| `dev` | only if you push upstream-mirrored `dev` (upstream code, not AI) |
 
-After the first successful workflow run:
+For AI builds use **`ghcr.io/k0gen/meshcore-bot:local-llm`**.
 
-1. **Settings → Actions → General** — enable workflows if they were disabled on the fork.
-2. **Packages** — open the new `meshcore-bot` package → **Package settings** → set visibility to **Public** (or authenticate `docker login ghcr.io` for private pulls).
-3. **Settings → Actions → General → Workflow permissions** — *Read and write* (needed for GHCR push).
+After first push: enable Actions on the fork; set the GHCR package to **Public** (or `docker login ghcr.io`).
 
-Local deploy: copy [`fork.env.example`](fork.env.example) to `.env` or run `./docker-setup.sh` (auto-detects `k0gen` in `origin` URL).
+Deploy locally: [`fork.env.example`](fork.env.example) or `./docker-setup.sh` (detects `k0gen` in `origin`).
 
-```bash
-docker pull ghcr.io/k0gen/meshcore-bot:latest
-# or
-docker compose up -d --build
-```
-
-## AI / local LLM (experimental)
-
-Code lives under [`fork/`](fork/) and loads via the standard local-plugin path (no core patches):
+## Local LLM
 
 ```ini
 [Bot]
 local_dir_path = fork
 ```
 
-Copy [`fork/config.ini.example`](fork/config.ini.example) into `fork/config.ini` and enable `[AI_Reply]`. Backends:
+```bash
+cp fork/config.ini.example fork/config.ini
+```
 
-- **Ollama** — `http://127.0.0.1:11434/v1` (OpenAI-compatible)
-- **LM Studio** — local server URL from LM Studio (typically port 1234)
+Enable `[AI_Reply]`, set `provider` (`ollama` or `lm_studio`), `model`, and `base_url` if needed.
 
-See [`fork/README.md`](fork/README.md) for configuration and roadmap.
+**Trigger:** `lm` — e.g. `lm what is meshcore?`  
+**Policy:** Same as other bot replies — `[Channels]` `monitor_channels`, `respond_to_dms`, `channel_keywords` (add `lm` to the list if you use a channel whitelist).
 
-## What to avoid merging upstream
-
-Keep fork-specific paths out of upstream PRs unless agreed:
-
-- `FORK.md`, `fork.env.example`, `fork/**`, `scripts/fork-remotes.sh`, `scripts/sync-upstream.sh`
-- The `if: github.repository == 'agessaman/meshcore-bot'` guard in `docs.yml` (harmless on upstream)
+See [`fork/README.md`](fork/README.md).
 
 ## Upstream PR (later)
 
-When field tests are done:
-
-1. Rebase `dev` onto latest `upstream/main`.
-2. Move stable AI code from `fork/` into `modules/` only if upstream wants it in-tree; otherwise document `local_dir_path` + ship plugin as optional add-on.
-3. Open PR to `agessaman/meshcore-bot:dev` with tests and docs.
+Rebase `local-llm` onto latest `upstream/main` or `upstream/dev`, field-test, then open PR to `agessaman/meshcore-bot:dev` when ready.

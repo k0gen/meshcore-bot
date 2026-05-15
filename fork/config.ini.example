@@ -2,13 +2,10 @@
 
 [AI_Reply]
 enabled = false
-# ollama | openai_compatible (LM Studio, etc.)
+# ollama | lm_studio | openai_compatible
 provider = ollama
-base_url = http://127.0.0.1:11434/v1
+base_url =
 model = llama3.2
-# Comma-separated keywords that will eventually trigger LLM replies (not active yet)
-trigger_keywords = ai,ask
-max_reply_length = 200
+trigger_keyword = lm
 request_timeout_seconds = 120
-# Optional system prompt for mesh replies
-system_prompt = You are a helpful assistant on a MeshCore radio mesh. Keep answers short and plain text.
+system_prompt = You are a helpful assistant on a MeshCore radio mesh. Keep answers short and plain text. No markdown.

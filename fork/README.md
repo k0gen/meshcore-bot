@@ -1,41 +1,53 @@
 # Fork extensions (local LLM)
 
-Experimental **AI auto-reply** for MeshCore, kept outside `modules/` so `main` can track upstream with small diffs.
+AI auto-reply for MeshCore via **Ollama** or **LM Studio** (OpenAI-compatible `/v1` API). Code lives under `fork/` so `main` can stay identical to upstream.
 
 ## Setup
 
-1. In main `config.ini`:
+1. Main `config.ini`:
 
    ```ini
    [Bot]
    local_dir_path = fork
    ```
 
-2. Copy plugin config:
+2. Plugin config:
 
    ```bash
    cp fork/config.ini.example fork/config.ini
-   # Edit fork/config.ini — set enabled = true when ready
    ```
 
-3. Run Ollama or LM Studio with an OpenAI-compatible API.
+3. Run Ollama (`http://127.0.0.1:11434/v1`) or LM Studio (local server, often `http://127.0.0.1:1234/v1`).
 
-4. Restart the bot.
+4. Set `[AI_Reply] enabled = true` and restart the bot.
 
-## Configuration
+## Trigger
 
-| Key | Description |
-|-----|-------------|
-| `provider` | `ollama` or `openai_compatible` (LM Studio, llama.cpp server, etc.) |
-| `base_url` | API root, e.g. `http://127.0.0.1:11434/v1` |
-| `model` | Model id (Ollama model name or LM Studio model id) |
-| `trigger_keywords` | Comma-separated mesh keywords that request an LLM reply (default: `ai`) |
-| `max_reply_length` | Truncate mesh replies (default 200) |
+Send a message starting with **`lm`** (after optional `[Bot] command_prefix` or legacy `!`):
 
-## Status
+- `lm what is the weather like on mesh?`
+- `lm` alone → model gets `(no question)`
 
-- Health check on start (lists models when possible).
-- LLM client and service skeleton are in place.
-- **Automatic mesh replies** are not wired yet — next step is hooking channel/DM events with rate limits and opt-in keywords.
+## Channel policy
 
-Field-test on branch `dev` before proposing upstream changes.
+The bot uses your existing `[Channels]` settings:
+
+- **`monitor_channels`** — channel replies only on listed channels
+- **`respond_to_dms`** — enable/disable DM replies
+- **`channel_keywords`** — if set, include **`lm`** in the comma-separated list
+
+## Providers
+
+| `provider` | Default `base_url` |
+|------------|----------------------|
+| `ollama` | `http://127.0.0.1:11434/v1` |
+| `lm_studio` | `http://127.0.0.1:1234/v1` |
+| `openai_compatible` | same as LM Studio (override with `base_url`) |
+
+## Message length
+
+Replies respect MeshCore UTF-8 byte limits (`CommandManager.get_max_message_length`): **158 bytes for DMs**, channel budget from firmware (username-dependent). Long answers are sent as multiple chunks with TX spacing.
+
+## Branch
+
+Develop on **`local-llm`**, not `main` or upstream `dev`. See [FORK.md](../FORK.md).
