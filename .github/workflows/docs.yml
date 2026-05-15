@@ -12,6 +12,8 @@ permissions:
 
 jobs:
   deploy:
+    # Docs site is published from upstream only; fork uses agessaman.github.io URLs in mkdocs.yml.
+    if: github.repository == 'agessaman/meshcore-bot'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
