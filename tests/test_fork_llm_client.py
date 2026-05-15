@@ -1,7 +1,6 @@
 """Tests for fork LLM client (no network)."""
 
 import json
-from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import pytest
