@@ -23,18 +23,18 @@ CONFIG="${1:-config.ini}"
 # --- read port and token from config.ini unless overridden by env -----
 _read_config_value() {
     local key="$1" default="$2"
-    local val=""
+    local value=""
     if [ -f "$CONFIG" ]; then
-        val=$(grep -A20 '^\[Admin\]' "$CONFIG" \
+        value="$(grep -A20 '^\[Admin\]' "$CONFIG" \
             | grep -m1 "^${key}[[:space:]]*=" \
             | sed 's/^[^=]*=[[:space:]]*//' \
             | tr -d '[:space:]' \
-            || true)
+            || true)"
     fi
-    if [ -n "$val" ]; then
-        echo "$val"
+    if [ -n "$value" ]; then
+        printf '%s\n' "$value"
     else
-        echo "$default"
+        printf '%s\n' "$default"
     fi
 }
 
