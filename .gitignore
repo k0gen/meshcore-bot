@@ -182,3 +182,6 @@ local/service_plugins/*
 !local/service_plugins/.gitkeep
 
 .claude/settings.local.json
+
+# Local bot runtime (PID, launchd helper logs)
+.run/

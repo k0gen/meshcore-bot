@@ -364,6 +364,10 @@ echo "Detecting git branch for Docker image tag..."
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
 DOCKER_IMAGE_TAG="latest"
 DOCKER_IMAGE_REGISTRY="ghcr.io/agessaman/meshcore-bot"
+# Fork: use k0gen GHCR when origin points at k0gen/meshcore-bot
+if git remote get-url origin 2>/dev/null | grep -qE 'github\.com[:/]k0gen/meshcore-bot'; then
+    DOCKER_IMAGE_REGISTRY="ghcr.io/k0gen/meshcore-bot"
+fi
 
 if [ -n "$GIT_BRANCH" ]; then
     # Map branch names to image tags
