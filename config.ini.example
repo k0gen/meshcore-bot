@@ -1293,6 +1293,35 @@ enabled = true
 enabled = true
 # channels =
 
+[Llm_Command]
+# Local LLM via Ollama or LM Studio (OpenAI-compatible API). Disabled by default.
+enabled = false
+# ollama | lm_studio | openai_compatible
+provider = ollama
+# Leave empty for default: http://127.0.0.1:11434/v1 (ollama) or :1234/v1 (lm_studio)
+base_url =
+model =
+request_timeout_seconds = 120
+max_reply_bytes = 120
+max_chunks = 2
+max_tokens = 512
+temperature = 0.6
+# compact | full — compact saves tokens on thinking models
+persona_mode = compact
+# Optional path to persona markdown (default: modules/llm/persona.default.md)
+persona_file =
+system_prompt =
+disable_reasoning = true
+# Run gwx/prefix/etc. before LLM; direct_tool_reply skips LLM when output fits mesh
+enable_tools = true
+direct_tool_reply = true
+weather_command = gwx
+default_weather_location =
+prefix_command = prefix
+tool_repeaters_limit = 10
+tool_repeaters_radius_km = 250
+# channels =
+
 [Version_Command]
 enabled = true
 # channels =
@@ -1626,6 +1655,13 @@ min_reupload_interval = 3600
 # true: Show detailed debug information (useful for troubleshooting)
 # false: Standard logging (default)
 verbose = false
+
+[Radio_Probe_Recovery]
+# Optional: exit process on repeated "Radio health probe timed out" (launchd/supervisor restarts)
+enabled = false
+restart_after_timeouts = 1
+cooldown_seconds = 600
+try_reconnect_first = true
 
 [Weather_Service]
 # Enable weather service for scheduled forecasts and alert monitoring (true/false)
